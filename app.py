@@ -128,7 +128,6 @@ async def get_formatted_size_async(size_bytes):
 
 
 async def format_message(link_data):
-    print("Available keys in link_data:", link_data.keys())
     thumbnails = {}
     if 'thumbs' in link_data:
         for key, url in link_data['thumbs'].items():
@@ -138,7 +137,16 @@ async def format_message(link_data):
 
     file_name = link_data["server_filename"]
     file_size = await get_formatted_size_async(link_data["size"])
-    download_link = link_data["dlink"]
+    download_link = link_data.get("dlink")  # Ensure that 'dlink' exists
+
+    # Check if 'dlink' is not available
+    if not download_link:
+        return {
+            'Title': file_name,
+            'Size': file_size,
+            'Message': "Download link not available",
+            'Thumbnails': thumbnails
+        }
 
     # Try to get fast direct link
     try:
@@ -152,9 +160,10 @@ async def format_message(link_data):
         'Title': file_name,
         'Size': file_size,
         'Direct Download Link': download_link,
-        'fast_link': direct_link,
+        'Fast Link': direct_link,
         'Thumbnails': thumbnails
     }
+
 
 
 @app.route('/')
