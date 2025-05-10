@@ -57,8 +57,7 @@ async def fetch_download_link_async(url):
                     return None
 
                 request_url = str(response1.url)
-                surl = request_url.split('surl=')[-1]
-
+                surl = request_url.split('surl=')[1]
                 params = {
                     'app_id': '250528',
                     'web': '1',
@@ -77,13 +76,12 @@ async def fetch_download_link_async(url):
 
                 async with session.get('https://www.terabox.com/share/list', params=params) as response2:
                     response_data2 = await response2.json()
-                    if 'list' not in response_data2 or not response_data2['list']:
+                    if 'list' not in response_data2:
                         return None
 
-                    first_item = response_data2['list'][0]
-                    if int(first_item.get('isdir', 0)) == 1:
+                    if response_data2['list'][0]['isdir'] == "1":
                         params.update({
-                            'dir': first_item['path'],
+                            'dir': response_data2['list'][0]['path'],
                             'order': 'asc',
                             'by': 'name',
                             'dplogid': log_id
@@ -98,8 +96,8 @@ async def fetch_download_link_async(url):
                             return response_data3['list']
 
                     return response_data2['list']
-    except Exception as e:
-        print(f"[Error] fetch_download_link_async: {e}")
+    except aiohttp.ClientResponseError as e:
+        print(f"Error fetching download link: {e}")
         return None
 
 
@@ -137,34 +135,23 @@ async def format_message(link_data):
 
     file_name = link_data["server_filename"]
     file_size = await get_formatted_size_async(link_data["size"])
-    download_link = link_data.get("dlink")  # Ensure that 'dlink' exists
+    download_link = link_data["dlink"]
 
-    # Check if 'dlink' is not available
-    if not download_link:
-        return {
-            'Title': file_name,
-            'Size': file_size,
-            'Message': "Download link not available",
-            'Thumbnails': thumbnails
-        }
-
-    # Try to get fast direct link
     try:
-        response = requests.get(download_link, headers=headers, allow_redirects=True, stream=True, timeout=10)
-        direct_link = response.url
+        r = requests.Session()
+        response = r.head(download_link, headers=headers, allow_redirects=False)
+        direct_link = response.headers.get("Location")
     except Exception as e:
         direct_link = None
-        print(f"[Error] Getting fast link: {e}")
 
     return {
         'Title': file_name,
         'Size': file_size,
         'Direct Download Link': download_link,
-        'Fast Link': direct_link,
+        'fast_link': direct_link,
         'Thumbnails': thumbnails
     }
-
-
+    
 
 @app.route('/')
 def home():
