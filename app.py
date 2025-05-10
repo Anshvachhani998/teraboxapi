@@ -50,10 +50,13 @@ async def fetch_download_link_async(url):
             async with session.get(url) as response1:
                 response1.raise_for_status()
                 response_data = await response1.text()
+
+                # Extract JS token and log ID
                 js_token = find_between(response_data, 'fn%28%22', '%22%29')
                 log_id = find_between(response_data, 'dp-logid=', '&')
 
                 if not js_token or not log_id:
+                    print("Error: js_token or log_id missing.")
                     return None
 
                 request_url = str(response1.url)
@@ -77,6 +80,7 @@ async def fetch_download_link_async(url):
                 async with session.get('https://www.terabox.com/share/list', params=params) as response2:
                     response_data2 = await response2.json()
                     if 'list' not in response_data2:
+                        print(f"Error: 'list' key missing in response data: {response_data2}")
                         return None
 
                     if response_data2['list'][0]['isdir'] == "1":
@@ -92,10 +96,27 @@ async def fetch_download_link_async(url):
                         async with session.get('https://www.terabox.com/share/list', params=params) as response3:
                             response_data3 = await response3.json()
                             if 'list' not in response_data3:
+                                print(f"Error: 'list' key missing in response data: {response_data3}")
                                 return None
-                            return response_data3['list']
+                            
+                            # Check for 'dlink'
+                            if 'dlink' in response_data3['list'][0]:
+                                download_link = response_data3['list'][0]['dlink']
+                                print(f"Download Link: {download_link}")
+                                return download_link
+                            else:
+                                print("Error: 'dlink' not found in the response.")
+                                return None
 
-                    return response_data2['list']
+                    # Check for download link in the initial response
+                    if 'dlink' in response_data2['list'][0]:
+                        download_link = response_data2['list'][0]['dlink']
+                        print(f"Download Link: {download_link}")
+                        return download_link
+
+                    print("Error: No download link found.")
+                    return None
+
     except aiohttp.ClientResponseError as e:
         print(f"Error fetching download link: {e}")
         return None
