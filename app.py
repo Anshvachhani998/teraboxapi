@@ -128,6 +128,7 @@ async def get_formatted_size_async(size_bytes):
 
 
 async def format_message(link_data):
+    print("Available keys in link_data:", link_data.keys())
     thumbnails = {}
     if 'thumbs' in link_data:
         for key, url in link_data['thumbs'].items():
