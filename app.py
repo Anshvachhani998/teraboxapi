@@ -16,7 +16,6 @@ def find_between(string, start, end):
     end_index = string.find(end, start_index)
     return string[start_index:end_index]
 
-cookies = load_cookies()
 
 def load_cookies():
     cookies_dict = {}
@@ -47,7 +46,7 @@ def find_between(string, start, end):
 
 async def fetch_download_link_async(url):
   try:
-      async with aiohttp.ClientSession(cookies=cookies, headers=headers) as session:
+      async with aiohttp.ClientSession(cookies=load_cookies(), headers=headers) as session:
           async with session.get(url) as response1:
               response1.raise_for_status()
               response_data = await response1.text()
@@ -213,7 +212,7 @@ async def get_formatted_size_async(size_bytes):
 
 async def fetch_download_link_async2(url):
     try:
-        async with aiohttp.ClientSession(cookies=cookies, headers=headers) as session:
+        async with aiohttp.ClientSession(cookies=load_cookies(), headers=headers) as session:
             async with session.get(url) as response1:
                 response1.raise_for_status()
                 response_data = await response1.text()
