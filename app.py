@@ -99,14 +99,11 @@ async def fetch_download_link_async(url):
                                 print(f"Error: 'list' key missing in response data: {response_data3}")
                                 return None
                             
-                            # Check for 'dlink'
-                            if 'dlink' in response_data3['list'][0]:
-                                download_link = response_data3['list'][0]['dlink']
-                                print(f"Download Link: {download_link}")
-                                return download_link
-                            else:
-                                print("Error: 'dlink' not found in the response.")
-                                return None
+                            # Check if file details contain a valid path or fs_id for download link
+                            file_data = response_data3['list'][0]
+                            download_link = f"https://www.terabox.com/{file_data['path']}"
+                            print(f"Download Link: {download_link}")
+                            return download_link
 
                     # Check for download link in the initial response
                     if 'dlink' in response_data2['list'][0]:
@@ -120,7 +117,6 @@ async def fetch_download_link_async(url):
     except aiohttp.ClientResponseError as e:
         print(f"Error fetching download link: {e}")
         return None
-
 
 def extract_thumbnail_dimensions(url: str) -> str:
     parsed = urlparse(url)
